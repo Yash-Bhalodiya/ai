@@ -1,0 +1,166 @@
+# ============================================================
+# PRACTICAL 6: DATA ANALYTICS III
+# Naive Bayes Classification on Iris Dataset
+#
+# Objective:
+# 1. Implement Gaussian Naive Bayes classification
+# 2. Compute Confusion Matrix
+# 3. Calculate Accuracy, Error Rate, Precision, Recall
+#
+# Dataset:
+# iris.csv (or built-in Iris dataset from scikit-learn)
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import (
+    confusion_matrix,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    classification_report
+)
+
+# ------------------------------------------------------------
+# STEP 2: Load Iris Dataset
+# ------------------------------------------------------------
+# Using built-in Iris dataset from scikit-learn
+iris = load_iris()
+
+# Create DataFrame
+df = pd.DataFrame(iris.data, columns=iris.feature_names)
+df['species'] = iris.target
+
+print("First 5 Rows of Dataset:")
+print(df.head())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 3: Define Features and Target
+# ------------------------------------------------------------
+X = df.drop('species', axis=1)
+y = df['species']
+
+print("Features Shape:", X.shape)
+print("Target Shape:", y.shape)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 4: Split Dataset into Training and Testing Sets
+# ------------------------------------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
+)
+
+# ------------------------------------------------------------
+# STEP 5: Train Gaussian Naive Bayes Model
+# ------------------------------------------------------------
+model = GaussianNB()
+model.fit(X_train, y_train)
+
+print("Model Training Completed.\n")
+
+# ------------------------------------------------------------
+# STEP 6: Make Predictions
+# ------------------------------------------------------------
+y_pred = model.predict(X_test)
+
+print("First 10 Actual vs Predicted:")
+comparison = pd.DataFrame({
+    'Actual': y_test.values[:10],
+    'Predicted': y_pred[:10]
+})
+print(comparison)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 7: Compute Confusion Matrix
+# ------------------------------------------------------------
+cm = confusion_matrix(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 8: Metrics
+# ------------------------------------------------------------
+# For multiclass classification, use weighted average
+accuracy = accuracy_score(y_test, y_pred)
+error_rate = 1 - accuracy
+precision = precision_score(y_test, y_pred, average='weighted')
+recall = recall_score(y_test, y_pred, average='weighted')
+
+print("Performance Metrics:")
+print("Accuracy    :", accuracy)
+print("Error Rate  :", error_rate)
+print("Precision   :", precision)
+print("Recall      :", recall)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 9: TP, FP, TN, FN for One-vs-Rest (Class 0 Example)
+# ------------------------------------------------------------
+# Convert class 0 to positive class, others to negative
+y_test_binary = (y_test == 0).astype(int)
+y_pred_binary = (y_pred == 0).astype(int)
+
+cm_binary = confusion_matrix(y_test_binary, y_pred_binary)
+
+# [[TN FP]
+#  [FN TP]]
+TN, FP, FN, TP = cm_binary.ravel()
+
+print("For Class 0 (Iris-setosa) as Positive Class:")
+print("True Positives (TP):", TP)
+print("False Positives (FP):", FP)
+print("True Negatives (TN):", TN)
+print("False Negatives (FN):", FN)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 10: Classification Report
+# ------------------------------------------------------------
+print("Classification Report:")
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=iris.target_names
+))
+
+# ------------------------------------------------------------
+# STEP 11: Visualize Confusion Matrix
+# ------------------------------------------------------------
+plt.figure(figsize=(6, 5))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt='d',
+    cmap='Blues',
+    xticklabels=iris.target_names,
+    yticklabels=iris.target_names
+)
+plt.title('Confusion Matrix - Naive Bayes on Iris Dataset')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
+
+# ------------------------------------------------------------
+# STEP 12: Save Predictions
+# ------------------------------------------------------------
+comparison.to_csv("naive_bayes_predictions.csv", index=False)
+
+print("Predictions saved as 'naive_bayes_predictions.csv'")
+print("Practical 6 completed successfully.")
