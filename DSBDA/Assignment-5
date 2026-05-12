@@ -1,0 +1,165 @@
+# ============================================================
+# PRACTICAL 5: DATA ANALYTICS II
+# Logistic Regression on Social_Network_Ads Dataset
+#
+# Objective:
+# 1. Perform classification using Logistic Regression
+# 2. Compute Confusion Matrix
+# 3. Calculate TP, FP, TN, FN
+# 4. Calculate Accuracy, Error Rate, Precision, Recall
+#
+# Dataset:
+# Download Social_Network_Ads.csv from Kaggle and place it
+# in the same folder as this notebook.
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    confusion_matrix,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    classification_report
+)
+
+# ------------------------------------------------------------
+# STEP 2: Load Dataset
+# ------------------------------------------------------------
+df = pd.read_csv("Social_Network_Ads.csv")
+
+print("First 5 Rows of Dataset:")
+print(df.head())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 3: Dataset Information
+# ------------------------------------------------------------
+print("Shape of Dataset:", df.shape)
+print("\nColumn Names:")
+print(df.columns.tolist())
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 4: Select Features and Target
+# ------------------------------------------------------------
+# Features: Age and EstimatedSalary
+# Target: Purchased (0 = No, 1 = Yes)
+X = df[['Age', 'EstimatedSalary']]
+y = df['Purchased']
+
+print("Features Shape:", X.shape)
+print("Target Shape:", y.shape)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 5: Split into Training and Testing Sets
+# ------------------------------------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.25,
+    random_state=42
+)
+
+# ------------------------------------------------------------
+# STEP 6: Feature Scaling
+# ------------------------------------------------------------
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# ------------------------------------------------------------
+# STEP 7: Train Logistic Regression Model
+# ------------------------------------------------------------
+model = LogisticRegression(random_state=42)
+model.fit(X_train, y_train)
+
+print("Model Training Completed.\n")
+
+# ------------------------------------------------------------
+# STEP 8: Make Predictions
+# ------------------------------------------------------------
+y_pred = model.predict(X_test)
+
+print("First 10 Actual vs Predicted:")
+comparison = pd.DataFrame({
+    'Actual': y_test.values[:10],
+    'Predicted': y_pred[:10]
+})
+print(comparison)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 9: Compute Confusion Matrix
+# ------------------------------------------------------------
+cm = confusion_matrix(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("\n")
+
+# Confusion Matrix Layout:
+# [[TN FP]
+#  [FN TP]]
+
+TN, FP, FN, TP = cm.ravel()
+
+print("True Positives (TP):", TP)
+print("False Positives (FP):", FP)
+print("True Negatives (TN):", TN)
+print("False Negatives (FN):", FN)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 10: Compute Performance Metrics
+# ------------------------------------------------------------
+accuracy = accuracy_score(y_test, y_pred)
+error_rate = 1 - accuracy
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+
+print("Performance Metrics:")
+print("Accuracy    :", accuracy)
+print("Error Rate  :", error_rate)
+print("Precision   :", precision)
+print("Recall      :", recall)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 11: Classification Report (Optional)
+# ------------------------------------------------------------
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+# ------------------------------------------------------------
+# STEP 12: Visualize Confusion Matrix
+# ------------------------------------------------------------
+plt.figure(figsize=(6, 4))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Predicted No', 'Predicted Yes'],
+            yticklabels=['Actual No', 'Actual Yes'])
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
+
+# ------------------------------------------------------------
+# STEP 13: Save Results
+# ------------------------------------------------------------
+comparison.to_csv("logistic_regression_predictions.csv", index=False)
+
+print("Predictions saved as 'logistic_regression_predictions.csv'")
+print("Practical 5 completed successfully.")
