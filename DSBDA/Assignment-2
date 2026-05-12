@@ -1,0 +1,299 @@
+# ============================================================
+# PRACTICAL 2: DATA WRANGLING II
+# Academic Performance Dataset
+#
+# Operations Performed:
+# 1. Create Academic Performance dataset
+# 2. Detect and handle missing values and inconsistencies
+# 3. Detect and treat outliers using IQR method
+# 4. Apply data transformations:
+#    - Normalization (0 to 1 scaling)
+#    - Log transformation to reduce skewness
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ------------------------------------------------------------
+# STEP 2: Create Academic Performance Dataset
+# ------------------------------------------------------------
+data = {
+    'Student_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    'Name': ['Amit', 'Priya', 'Rahul', 'Sneha', 'Vikas',
+             'Neha', 'Arjun', 'Pooja', 'Rohan', 'Kiran'],
+    'Gender': ['Male', 'Female', 'Male', 'Female', 'Male',
+               'Female', 'Male', 'Female', 'Male', 'Female'],
+    'Study_Hours': [2, 5, 4, np.nan, 6, 8, 3, 100, 5, 4],   # 100 is outlier
+    'Attendance': [75, 88, 92, 85, 110, 95, np.nan, 90, 80, 87],  # 110 inconsistent
+    'Marks': [45, 78, 67, 72, 85, 95, 58, 90, 200, np.nan], # 200 outlier, NaN
+    'Grade': ['C', 'B', 'B', 'B', 'A', 'A', 'C', 'A', 'A', None]
+}
+
+df = pd.DataFrame(data)
+
+print("Original Dataset:\n")
+print(df)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 3: Check Missing Values
+# ------------------------------------------------------------
+print("Missing Values in Each Column:\n")
+print(df.isnull().sum())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 4: Handle Inconsistencies
+# ------------------------------------------------------------
+# Attendance should be between 0 and 100
+df.loc[df['Attendance'] > 100, 'Attendance'] = np.nan
+
+print("After correcting inconsistent Attendance values:\n")
+print(df[['Student_ID', 'Attendance']])
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 5: Fill Missing Values (Updated - No FutureWarning)
+# ------------------------------------------------------------
+
+# Numeric columns -> fill missing values with median
+numeric_cols = ['Study_Hours', 'Attendance', 'Marks']
+
+for col in numeric_cols:
+    # Replace NaN values with the median of that column
+    df[col] = df[col].fillna(df[col].median())
+
+# Categorical column -> fill missing values with mode
+df['Grade'] = df['Grade'].fillna(df['Grade'].mode()[0])
+
+print("Dataset after filling missing values:\n")
+print(df)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 6: Detect Outliers Using IQR Method
+# ------------------------------------------------------------
+def detect_outliers_iqr(column):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = df[(df[column] < lower_bound) |
+                  (df[column] > upper_bound)]
+
+    print(f"Outliers in {column}: ")
+    print(outliers[[column]])
+    print()
+
+    return lower_bound, upper_bound
+
+# Detect outliers in numeric columns
+bounds = {}
+for col in numeric_cols:
+    bounds[col] = detect_outliers_iqr(col)
+
+# ------------------------------------------------------------
+# STEP 7: Treat Outliers (Capping)
+# ------------------------------------------------------------
+for col in numeric_cols:
+    lower, upper = bounds[col]
+    df[col] = np.where(df[col] < lower, lower, df[col])
+    df[col] = np.where(df[col] > upper, upper, df[col])
+
+print("Dataset after treating outliers:\n")
+print(df)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 8: Data Transformation - Normalization
+# Purpose: Change scale for better understanding
+# ------------------------------------------------------------
+df['Marks_Normalized'] = (
+    (df['Marks'] - df['Marks'].min()) /
+    (df['Marks'].max() - df['Marks'].min())
+)
+
+print("Normalized Marks (0 to 1):")
+print(df[['Marks', 'Marks_Normalized']])
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 9: Data Transformation - Log Transformation
+# Purpose: Reduce skewness
+# ------------------------------------------------------------
+df['Marks_Log'] = np.log1p(df['Marks'])  # log(1 + x)
+
+print("Log Transformed Marks:")
+print(df[['Marks', 'Marks_Log']])
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 10: Convert Categorical Variable to Numerical
+# ------------------------------------------------------------
+df['Gender_Encoded'] = df['Gender'].map({'Male': 0, 'Female': 1})
+
+print("Gender Encoded:")
+print(df[['Gender', 'Gender_Encoded']])
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 11: Final Statistical Summary
+# ------------------------------------------------------------
+print("Final Statistical Summary:\n")
+print(df.describe())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 12: Boxplots Before and After Outlier Treatment
+# ------------------------------------------------------------
+plt.figure(figsize=(8, 4))
+sns.boxplot(x=df['Marks'])
+plt.title("Box Plot of Marks After Outlier Treatment")
+plt.show()
+
+# ------------------------------------------------------------
+# STEP 13: Save Cleaned Dataset
+# ------------------------------------------------------------
+df.to_csv("academic_performance_cleaned.csv", index=False)
+
+print("Cleaned dataset saved as 'academic_performance_cleaned.csv'.")
+
+
+
+Data Wrangling II focuses on advanced data preprocessing techniques used to 
+improve the quality of a dataset before analysis or machine learning. In this 
+practical, an Academic Performance Dataset is created containing student-related
+information such as study hours, attendance, marks, gender, and grades. The dataset
+is then examined for missing values, inconsistencies, outliers, and skewed distributions.
+
+Missing Values
+
+Missing values occur when data is not available for certain observations. In Python, 
+missing values are represented as NaN (Not a Number).
+
+Examples:
+
+Marks not entered
+Attendance not recorded
+Grade left blank
+
+Missing values can be detected using:
+
+df.isnull().sum()
+Handling Missing Values
+
+Common techniques include:
+
+Removing rows (dropna())
+Replacing with mean, median, or mode (fillna())
+
+Median is often preferred for numerical columns because it is less affected by extreme values.
+
+Data Inconsistencies
+
+Inconsistencies are invalid or unrealistic values that violate business rules.
+
+Examples:
+
+Attendance = 110%
+Marks = -5
+Study Hours = negative value
+
+These values are identified and corrected or replaced with appropriate values.
+
+Interquartile Range (IQR) Method
+
+The IQR method is widely used to detect outliers.
+
+IQR=Q3 −Q1
+Where:
+Q1 = First quartile (25th percentile) 
+Q3 = Third quartile (75th percentile)
+
+Outlier bounds:
+
+Lower Bound=Q1 −1.5×IQR
+Upper Bound=Q3 +1.5×IQR
+
+Values outside these limits are considered outliers.
+
+Data Transformation:
+
+Data transformation modifies variables to improve analysis.
+
+Reasons for Transformation:
+Change scale for better understanding
+Reduce skewness
+Convert non-linear relationships into linear ones
+
+Normalization
+
+Normalization scales values between 0 and 1.
+
+X′=Xmax−Xmin / X−Xmin
+
+This ensures all features are on a comparable scale.
+
+Log Transformation
+
+Log transformation is used to reduce positive skewness.
+
+X′=log(1+X)
+
+It compresses large values and makes the distribution closer to normal.
+
+Encoding Categorical Variables
+
+Categorical variables such as Gender are converted into numerical values.
+
+Example:
+
+Male → 0
+Female → 1
+
+This allows machine learning algorithms to process the data.
+
+
+| No. | Viva Question                                              | Answer                                                                                                                                                            |
+| --- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | What is Data Wrangling II about?                           | This practical focuses on detecting and handling missing values, inconsistencies, outliers, and applying data transformations to an Academic Performance dataset. |
+| 2   | What is an Academic Performance Dataset?                   | A dataset containing student-related information such as study hours, attendance, marks, gender, and grades.                                                      |
+| 3   | What are missing values?                                   | Missing values are data entries that are not available and are represented as `NaN` in Python.                                                                    |
+| 4   | What does NaN stand for?                                   | Not a Number.                                                                                                                                                     |
+| 5   | How do you detect missing values?                          | Using `df.isnull()` or `df.isnull().sum()`.                                                                                                                       |
+| 6   | How do you handle missing values?                          | By removing them using `dropna()` or replacing them using `fillna()` with mean, median, or mode.                                                                  |
+| 7   | Why is median preferred for numerical missing values?      | Median is robust to outliers and represents the central value better when data is skewed.                                                                         |
+| 8   | Why is mode used for categorical variables?                | Mode represents the most frequent category and is suitable for replacing missing categorical values.                                                              |
+| 9   | What are data inconsistencies?                             | Invalid or unrealistic values that violate expected rules, such as attendance greater than 100%.                                                                  |
+| 10  | Give examples of inconsistencies.                          | Attendance = 110, Marks = -5, Study Hours = negative value.                                                                                                       |
+| 11  | How do you handle inconsistencies?                         | By correcting them, replacing them with valid values, or setting them to missing and imputing later.                                                              |
+| 12  | What is an outlier?                                        | A data point that lies far away from most other observations.                                                                                                     |
+| 13  | Why are outliers problematic?                              | They can distort the mean, standard deviation, and negatively affect machine learning models.                                                                     |
+| 14  | Which method is used to detect outliers in this practical? | The Interquartile Range (IQR) method.                                                                                                                             |
+| 15  | What is IQR?                                               | The difference between the third quartile and the first quartile.                                                                                                 |
+| 16  | Write the IQR formula.                                     | IQR = Q_3 - Q_1                                                                                                                                                   |
+| 17  | What are Q1 and Q3?                                        | Q1 is the 25th percentile and Q3 is the 75th percentile.                                                                                                          |
+| 18  | What are the outlier bounds?                               | \text{Lower Bound} = Q_1 - 1.5 \times IQR \ \text{Upper Bound} = Q_3 + 1.5 \times IQR                                                                             |
+| 19  | How do you treat outliers?                                 | By removing them, replacing them, or capping them to the lower and upper bounds.                                                                                  |
+| 20  | What is capping (winsorization)?                           | Replacing extreme values with the nearest acceptable boundary values.                                                                                             |
+| 21  | What is data transformation?                               | Changing the form or scale of data to improve analysis or model performance.                                                                                      |
+| 22  | Why is data transformation needed?                         | To change scale, reduce skewness, and improve interpretability and model performance.                                                                             |
+| 23  | What is normalization?                                     | Scaling data to a fixed range, usually 0 to 1.                                                                                                                    |
+| 24  | Write the normalization formula.                           | X' = \frac{X - X_{min}}{X_{max} - X_{min}}                                                                                                                        |
+| 25  | What is standardization?                                   | Transforming data so that mean = 0 and standard deviation = 1.                                                                                                    |
+| 26  | Write the standardization formula.                         |                                                                                                                                                                   |
+| 27 | What is skewness? | The measure of asymmetry in a distribution. |
+| 28 | What is positive skewness? | A distribution with a long tail on the right side. |
+| 29 | What is negative skewness? | A distribution with a long tail on the left side. |
+| 30 | Which transformation reduces skewness? | Log transformation. |
+| 31 | What is log transformation? | Applying log(1+x) to compress large values and reduce right skewness. |
+| 32 | What is the purpose of log transformation in this practical? | To make the distribution more normal and reduce the effect of large values. |
+| 33 | What is a box plot? | A graphical representation of quartiles used to visualize spread and detect outliers. |
