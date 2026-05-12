@@ -1,0 +1,155 @@
+# ============================================================
+# PRACTICAL 7: TEXT ANALYTICS
+#
+# Objective:
+# 1. Apply document preprocessing techniques:
+#    - Tokenization
+#    - POS Tagging
+#    - Stop Words Removal
+#    - Stemming
+#    - Lemmatization
+# 2. Compute TF-IDF representation of the document
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import nltk
+import pandas as pd
+
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk import pos_tag
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# ------------------------------------------------------------
+# STEP 2: Download Required NLTK Resources
+# (Run once; NLTK will skip if already downloaded)
+# ------------------------------------------------------------
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+
+# ------------------------------------------------------------
+# STEP 3: Sample Document
+# ------------------------------------------------------------
+document = """
+Data Science is an interdisciplinary field that uses statistics,
+machine learning, and programming to extract useful insights from data.
+Big Data refers to extremely large and complex datasets that require
+advanced tools for storage and processing.
+Text analytics is used to process and analyze textual information.
+"""
+
+print("Original Document:\n")
+print(document)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 4: Sentence Tokenization
+# ------------------------------------------------------------
+sentences = sent_tokenize(document)
+
+print("Sentence Tokenization:\n")
+for i, sentence in enumerate(sentences, start=1):
+    print(f"{i}. {sentence}")
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 5: Word Tokenization
+# ------------------------------------------------------------
+tokens = word_tokenize(document)
+
+print("Word Tokens:\n")
+print(tokens)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 6: POS Tagging
+# ------------------------------------------------------------
+pos_tags = pos_tag(tokens)
+
+print("POS Tags:\n")
+print(pos_tags)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 7: Stop Words Removal
+# ------------------------------------------------------------
+stop_words = set(stopwords.words('english'))
+
+filtered_tokens = [
+    word for word in tokens
+    if word.isalpha() and word.lower() not in stop_words
+]
+
+print("Tokens After Stop Words Removal:\n")
+print(filtered_tokens)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 8: Stemming
+# ------------------------------------------------------------
+stemmer = PorterStemmer()
+
+stemmed_words = [stemmer.stem(word) for word in filtered_tokens]
+
+print("Stemmed Words:\n")
+print(stemmed_words)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 9: Lemmatization
+# ------------------------------------------------------------
+lemmatizer = WordNetLemmatizer()
+
+lemmatized_words = [
+    lemmatizer.lemmatize(word.lower())
+    for word in filtered_tokens
+]
+
+print("Lemmatized Words:\n")
+print(lemmatized_words)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 10: TF-IDF Representation
+# ------------------------------------------------------------
+documents = [document]
+
+vectorizer = TfidfVectorizer(stop_words='english')
+tfidf_matrix = vectorizer.fit_transform(documents)
+
+# Convert to DataFrame for readability
+tfidf_df = pd.DataFrame(
+    tfidf_matrix.toarray(),
+    columns=vectorizer.get_feature_names_out()
+)
+
+print("TF-IDF Matrix:\n")
+print(tfidf_df)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 11: Term Frequency (Optional)
+# ------------------------------------------------------------
+term_frequency = pd.DataFrame({
+    'Term': vectorizer.get_feature_names_out(),
+    'TF-IDF Score': tfidf_matrix.toarray()[0]
+}).sort_values(by='TF-IDF Score', ascending=False)
+
+print("Terms Sorted by TF-IDF Score:\n")
+print(term_frequency)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 12: Save Results
+# ------------------------------------------------------------
+tfidf_df.to_csv("tfidf_output.csv", index=False)
+
+print("TF-IDF output saved as 'tfidf_output.csv'")
+print("Practical 7 completed successfully.")
