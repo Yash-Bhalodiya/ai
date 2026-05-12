@@ -1,0 +1,517 @@
+# ============================================================
+# PRACTICAL 3: DESCRIPTIVE STATISTICS
+# Measures of Central Tendency and Variability
+#
+# PART 1:
+# Summary statistics (mean, median, min, max, std)
+# grouped by a categorical variable using Titanic dataset
+#
+# PART 2:
+# Statistical details of each species in Iris dataset
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import pandas as pd
+import numpy as np
+from sklearn.datasets import load_iris
+
+# ============================================================
+# PART 1: TITANIC DATASET
+# ============================================================
+
+print("=" * 60)
+print("PART 1: SUMMARY STATISTICS USING TITANIC DATASET")
+print("=" * 60)
+
+# ------------------------------------------------------------
+# STEP 2: Load Titanic Dataset
+# Download titanic.csv from:
+# https://www.kaggle.com/datasets/yasserh/titanic-dataset
+# ------------------------------------------------------------
+df = pd.read_csv("Titanic-Dataset.csv")
+
+# Display first 5 rows
+print("\nFirst 5 rows of Titanic Dataset:")
+print(df.head())
+
+# ------------------------------------------------------------
+# STEP 3: Select Numeric Variable and Categorical Variable
+# Numeric Variable      : Age
+# Categorical Variable  : Sex
+# ------------------------------------------------------------
+
+# Remove missing values in Age
+df = df.dropna(subset=['Age'])
+
+# ------------------------------------------------------------
+# STEP 4: Group by Categorical Variable and Compute Statistics
+# ------------------------------------------------------------
+grouped_stats = df.groupby('Sex')['Age'].agg([
+    'mean', 'median', 'min', 'max', 'std'
+])
+
+print("\nSummary Statistics of Age Grouped by Sex:")
+print(grouped_stats)
+
+# ------------------------------------------------------------
+# STEP 5: Create List of Age Values for Each Category
+# ------------------------------------------------------------
+age_lists = df.groupby('Sex')['Age'].apply(list)
+
+print("\nList of Age Values for Each Category:")
+for category, values in age_lists.items():
+    print(f"\n{category}:")
+    print(values[:20], "...")   # Display first 20 values only
+
+# ============================================================
+# PART 2: IRIS DATASET
+# ============================================================
+
+print("\n" + "=" * 60)
+print("PART 2: STATISTICAL DETAILS OF IRIS DATASET")
+print("=" * 60)
+
+# ------------------------------------------------------------
+# STEP 6: Load Iris Dataset from sklearn
+# ------------------------------------------------------------
+iris = load_iris()
+
+# Create DataFrame
+iris_df = pd.DataFrame(
+    iris.data,
+    columns=iris.feature_names
+)
+
+# Add species names
+iris_df['species'] = pd.Categorical.from_codes(
+    iris.target,
+    iris.target_names
+)
+
+# Display first 5 rows
+print("\nFirst 5 Rows of Iris Dataset:")
+print(iris_df.head())
+
+# ------------------------------------------------------------
+# STEP 7: Group by Species and Display Statistics
+# ------------------------------------------------------------
+for species in iris_df['species'].unique():
+    print("\n" + "=" * 50)
+    print(f"STATISTICAL DETAILS FOR: {species.upper()}")
+    print("=" * 50)
+
+    subset = iris_df[iris_df['species'] == species]
+
+    # Percentiles and summary statistics
+    print(subset.describe())
+
+# ------------------------------------------------------------
+# STEP 8: Additional Percentiles (25%, 50%, 75%)
+# ------------------------------------------------------------
+print("\nCustom Percentiles for Each Species:")
+
+for species in iris_df['species'].unique():
+    print("\n" + "-" * 50)
+    print(f"{species.upper()}")
+    print("-" * 50)
+
+    subset = iris_df[iris_df['species'] == species]
+
+    percentiles = subset.quantile([0.25, 0.50, 0.75])
+    print(percentiles)
+
+# ------------------------------------------------------------
+# STEP 9: Mean and Standard Deviation by Species
+# (Updated to remove FutureWarning)
+# ------------------------------------------------------------
+
+print("\nMean of Each Feature by Species:")
+print(iris_df.groupby('species', observed=False).mean())
+
+print("\nStandard Deviation of Each Feature by Species:")
+print(iris_df.groupby('species', observed=False).std())
+
+# ------------------------------------------------------------
+# STEP 10: Save Results (Optional)
+# (Updated to remove FutureWarning)
+# ------------------------------------------------------------
+
+grouped_stats.to_csv("titanic_grouped_statistics.csv")
+
+# Save mean values of each iris species
+iris_df.groupby('species', observed=False).mean().to_csv(
+    "iris_mean_by_species.csv"
+)
+
+print("\nResults saved successfully.")
+print("1. titanic_grouped_statistics.csv")
+print("2. iris_mean_by_species.csv")
+print("\nPractical 3 completed successfully.")
+
+
+Descriptive Statistics is a branch of statistics used to summarize, organize, 
+and present data in a meaningful way. Instead of analyzing every individual 
+observation, descriptive statistics condense large datasets into a few numerical 
+measures that reveal the central value and the amount of variation in the data.
+
+1. Measures of Central Tendency
+
+Measures of central tendency indicate the “center” or typical value of a dataset.
+
+Mean (Arithmetic Average)
+
+The mean is the sum of all observations divided by the number of observations.
+
+x
+ˉ
+=
+n
+∑x
+i
+	​
+
+	​
+
+
+Where:
+
+x
+ˉ
+ = Mean
+x
+i
+	​
+
+ = Individual observations
+n = Number of observations
+
+The mean is widely used but is sensitive to outliers.
+
+Median
+
+The median is the middle value when the data is arranged in ascending order.
+
+If the number of observations is odd, the median is the center value.
+If even, it is the average of the two middle values.
+
+The median is robust to outliers and is useful for skewed data.
+
+Minimum and Maximum
+Minimum: Smallest value in the dataset
+Maximum: Largest value in the dataset
+
+These measures indicate the range of observed values.
+
+2. Measures of Variability
+
+Measures of variability describe how spread out the data is.
+
+Range
+Range=Maximum−Minimum
+
+Variance
+Variance measures the average squared deviation from the mean.
+
+σ2=n∑(xi−xˉ)2
+	​
+
+Standard Deviation
+
+Standard deviation is the square root of variance and is expressed in the same units as the original data.
+
+A larger standard deviation indicates greater dispersion.
+
+3. Percentiles and Quartiles
+
+A percentile indicates the value below which a given percentage of observations fall.
+
+Important percentiles:
+
+25th percentile (Q1)
+50th percentile (Median or Q2)
+75th percentile (Q3)
+
+Quartiles divide the dataset into four equal parts.
+
+4. Grouped Statistics
+
+In many datasets, numerical variables are analyzed within categories.
+
+Example:
+
+Categorical Variable: Sex
+Numerical Variable: Age
+
+Using grouping, we can compute mean, median, min, max, and standard deviation for each category separately. This allows comparison between groups.
+
+5. Titanic Dataset
+
+The Titanic dataset contains information about passengers such as:
+
+Age
+Sex
+Fare
+Passenger Class
+Survival Status
+
+In this practical, Age is analyzed by grouping the data according to Sex. A list of ages is also created for each gender.
+
+6. Iris Dataset
+
+The Iris dataset is a well-known dataset used in statistics and machine learning.
+
+Features:
+Sepal Length
+Sepal Width
+Petal Length
+Petal Width
+Species:
+Iris-setosa
+Iris-versicolor
+Iris-virginica
+
+For each species, Python’s describe() function is used to display:
+
+Count
+Mean
+Standard Deviation
+Minimum
+Quartiles
+Maximum
+7. Python Functions Used
+Function	Purpose
+groupby()	Groups data by a categorical variable
+agg()	Applies multiple statistical functions
+describe()	Generates statistical summary
+mean()	Calculates arithmetic mean
+median()	Calculates median
+std()	Calculates standard deviation
+quantile()	Computes percentiles
+apply(list)	Creates a list of values for each category
+8. Importance of Descriptive Statistics
+
+Descriptive statistics are essential because they:
+
+Summarize large datasets
+Reveal central values and variability
+Enable comparisons between categories
+Detect unusual patterns and outliers
+Form the basis for further statistical analysis and machine learning
+
+
+1. Measures of Central Tendency
+
+Measures of central tendency indicate the “center” or typical value of a dataset.
+
+Mean (Arithmetic Average)
+
+The mean is the sum of all observations divided by the number of observations.
+
+x
+ˉ
+=
+n
+∑x
+i
+	​
+
+	​
+
+
+Where:
+
+x
+ˉ
+ = Mean
+x
+i
+	​
+
+ = Individual observations
+n = Number of observations
+
+The mean is widely used but is sensitive to outliers.
+
+Median
+
+The median is the middle value when the data is arranged in ascending order.
+
+If the number of observations is odd, the median is the center value.
+If even, it is the average of the two middle values.
+
+The median is robust to outliers and is useful for skewed data.
+
+Minimum and Maximum
+Minimum: Smallest value in the dataset
+Maximum: Largest value in the dataset
+
+These measures indicate the range of observed values.
+
+2. Measures of Variability
+
+Measures of variability describe how spread out the data is.
+
+Range
+Range=Maximum−Minimum
+Variance
+
+Variance measures the average squared deviation from the mean.
+
+σ
+2
+=
+n
+∑(x
+i
+	​
+
+−
+x
+ˉ
+)
+2
+	​
+
+Standard Deviation
+
+Standard deviation is the square root of variance and is expressed in the same units as the original data.
+
+σ=
+n
+∑(x
+i
+	​
+
+−
+x
+ˉ
+)
+2
+	​
+
+	​
+
+
+A larger standard deviation indicates greater dispersion.
+
+3. Percentiles and Quartiles
+
+A percentile indicates the value below which a given percentage of observations fall.
+
+Important percentiles:
+
+25th percentile (Q1)
+50th percentile (Median or Q2)
+75th percentile (Q3)
+
+Quartiles divide the dataset into four equal parts.
+
+4. Grouped Statistics
+
+In many datasets, numerical variables are analyzed within categories.
+
+Example:
+
+Categorical Variable: Sex
+Numerical Variable: Age
+
+Using grouping, we can compute mean, median, min, max, and standard deviation for each category separately. This allows comparison between groups.
+
+5. Titanic Dataset
+
+The Titanic dataset contains information about passengers such as:
+
+Age
+Sex
+Fare
+Passenger Class
+Survival Status
+
+In this practical, Age is analyzed by grouping the data according to Sex. A list of ages is also created for each gender.
+
+6. Iris Dataset
+
+The Iris dataset is a well-known dataset used in statistics and machine learning.
+
+Features:
+Sepal Length
+Sepal Width
+Petal Length
+Petal Width
+Species:
+Iris-setosa
+Iris-versicolor
+Iris-virginica
+
+For each species, Python’s describe() function is used to display:
+
+Count
+Mean
+Standard Deviation
+Minimum
+Quartiles
+Maximum
+7. Python Functions Used
+Function	Purpose
+groupby()	Groups data by a categorical variable
+agg()	Applies multiple statistical functions
+describe()	Generates statistical summary
+mean()	Calculates arithmetic mean
+median()	Calculates median
+std()	Calculates standard deviation
+quantile()	Computes percentiles
+apply(list)	Creates a list of values for each category
+8. Importance of Descriptive Statistics
+
+Descriptive statistics are essential because they:
+
+Summarize large datasets
+Reveal central values and variability
+Enable comparisons between categories
+Detect unusual patterns and outliers
+Form the basis for further statistical analysis and machine learning
+
+| No. | Viva Question                                                   | Answer                                                                                                                                |
+| --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | What is Descriptive Statistics?                                 | Descriptive Statistics is the branch of statistics used to summarize, organize, and present data using numerical measures and tables. |
+| 2   | What are measures of central tendency?                          | They are statistics that represent the center of a dataset, such as mean, median, and mode.                                           |
+| 3   | What are measures of variability?                               | They describe the spread or dispersion of data, such as range, variance, and standard deviation.                                      |
+| 4   | What is the mean?                                               | The arithmetic average obtained by dividing the sum of all values by the number of observations.                                      |
+| 5   | Write the formula for mean.                                     | \bar{x} = \frac{\sum x_i}{n}                                                                                                          |
+| 6   | What is the median?                                             | The middle value when the data is arranged in ascending order.                                                                        |
+| 7   | When is the median preferred over the mean?                     | When the data contains outliers or is highly skewed.                                                                                  |
+| 8   | What is the mode?                                               | The most frequently occurring value in a dataset.                                                                                     |
+| 9   | What is the minimum?                                            | The smallest value in the dataset.                                                                                                    |
+| 10  | What is the maximum?                                            | The largest value in the dataset.                                                                                                     |
+| 11  | What is the range?                                              | The difference between the maximum and minimum values.                                                                                |
+| 12  | What is variance?                                               | The average of squared deviations from the mean.                                                                                      |
+| 13  | What is standard deviation?                                     | The square root of variance; it measures dispersion in the same units as the data.                                                    |
+| 14  | Write the formula for standard deviation.                       | \sigma = \sqrt{\frac{\sum (x_i - \bar{x})^2}{n}}                                                                                      |
+| 15  | What is a percentile?                                           | A value below which a specified percentage of observations fall.                                                                      |
+| 16  | What are quartiles?                                             | Values that divide the data into four equal parts: Q1, Q2, and Q3.                                                                    |
+| 17  | What is Q1?                                                     | The 25th percentile.                                                                                                                  |
+| 18  | What is Q2?                                                     | The 50th percentile, also called the median.                                                                                          |
+| 19  | What is Q3?                                                     | The 75th percentile.                                                                                                                  |
+| 20  | What does `describe()` do in Pandas?                            | It provides count, mean, standard deviation, min, quartiles, and max.                                                                 |
+| 21  | What does `groupby()` do?                                       | It groups data according to categories and allows statistics to be computed for each group.                                           |
+| 22  | What does `agg()` do?                                           | It applies multiple aggregation functions such as mean, median, and standard deviation.                                               |
+| 23  | Why group by a categorical variable?                            | To compare numerical summaries across categories, such as age by gender.                                                              |
+| 24  | Which datasets are used in this practical?                      | Titanic dataset and Iris dataset.                                                                                                     |
+| 25  | Which variable is grouped in the Titanic example?               | `Sex` (categorical variable).                                                                                                         |
+| 26  | Which numerical variable is analyzed in the Titanic example?    | `Age`.                                                                                                                                |
+| 27  | What is the Iris dataset?                                       | A dataset of 150 flowers with four measurements and three species.                                                                    |
+| 28  | Name the three Iris species.                                    | Iris-setosa, Iris-versicolor, and Iris-virginica.                                                                                     |
+| 29  | What does `quantile()` do?                                      | It calculates percentiles and quartiles.                                                                                              |
+| 30  | What does `apply(list)` do?                                     | It converts grouped values into a Python list for each category.                                                                      |
+| 31  | What is standard deviation used for?                            | To measure how much data values vary around the mean.                                                                                 |
+| 32  | What does a high standard deviation indicate?                   | Data points are widely spread out.                                                                                                    |
+| 33  | What does a low standard deviation indicate?                    | Data points are clustered close to the mean.                                                                                          |
+| 34  | Why is descriptive statistics important?                        | It summarizes large datasets and helps understand patterns before advanced analysis.                                                  |
+| 35  | What is the difference between statistics and machine learning? | Statistics summarizes and analyzes data, while machine learning builds predictive models.                                             |
+| 36  | What is exploratory data analysis (EDA)?                        | The process of understanding data using statistics and visualizations.                                                                |
+| 37  | Which later practicals use these concepts?                      | Regression, classification, and data visualization practicals.                                                                        |
+| 38  | Why is `dropna()` used before computing statistics?             | To remove missing values that could affect calculations.                                                                              |
+| 39  | What is the purpose of grouping in statistics?                  | To compare distributions among different categories.                                                                                  |
+| 40  | Give a real-world application of descriptive statistics.        | Comparing student marks by department or salaries by job role.                                                                        |
