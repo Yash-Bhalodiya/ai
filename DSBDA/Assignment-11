@@ -1,0 +1,153 @@
+// ============================================================
+// PRACTICAL 11: DESIGN A DISTRIBUTED APPLICATION USING
+// HADOOP MAPREDUCE TO PROCESS A SYSTEM LOG FILE
+//
+// Objective:
+// Count the number of occurrences of each log level
+// (INFO, WARN, ERROR, DEBUG) in a system log file.
+//
+// Example Input (system_log.txt):
+// 2025-01-01 10:00:00 INFO Application started
+// 2025-01-01 10:01:10 ERROR Database connection failed
+// 2025-01-01 10:02:20 WARN Low memory warning
+// 2025-01-01 10:03:30 INFO User logged in
+// 2025-01-01 10:04:40 ERROR File not found
+//
+// Example Output:
+// DEBUG  0
+// ERROR  2
+// INFO   2
+// WARN   1
+// ============================================================
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class LogProcessor {
+
+    // ========================================================
+    // MAPPER CLASS
+    // Reads each line of the log file and extracts the log level
+    // ========================================================
+    public static class LogMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text logLevel = new Text();
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            // Convert line to string
+            String line = value.toString().trim();
+
+            // Skip empty lines
+            if (line.length() == 0) {
+                return;
+            }
+
+            // Split line into words
+            String[] parts = line.split("\\s+");
+
+            // Expected format:
+            // date time LOGLEVEL message...
+            // Example:
+            // 2025-01-01 10:01:10 ERROR Database connection failed
+            if (parts.length >= 3) {
+                String level = parts[2].toUpperCase();
+
+                // Emit only standard log levels
+                if (level.equals("INFO") ||
+                    level.equals("WARN") ||
+                    level.equals("ERROR") ||
+                    level.equals("DEBUG")) {
+
+                    logLevel.set(level);
+                    context.write(logLevel, one);
+                }
+            }
+        }
+    }
+
+    // ========================================================
+    // REDUCER CLASS
+    // Sums counts for each log level
+    // ========================================================
+    public static class SumReducer
+            extends Reducer<Text, IntWritable,
+                            Text, IntWritable> {
+
+        private IntWritable result = new IntWritable();
+
+        public void reduce(Text key,
+                           Iterable<IntWritable> values,
+                           Context context)
+                throws IOException, InterruptedException {
+
+            int sum = 0;
+
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+
+    // ========================================================
+    // DRIVER METHOD
+    // Configures and runs the Hadoop job
+    // ========================================================
+    public static void main(String[] args)
+            throws Exception {
+
+        // Check command-line arguments
+        if (args.length != 2) {
+            System.err.println(
+                "Usage: LogProcessor <input path> <output path>"
+            );
+            System.exit(-1);
+        }
+
+        // Create Hadoop configuration
+        Configuration conf = new Configuration();
+
+        // Create job
+        Job job = Job.getInstance(conf, "System Log Processor");
+        job.setJarByClass(LogProcessor.class);
+
+        // Set Mapper and Reducer classes
+        job.setMapperClass(LogMapper.class);
+        job.setReducerClass(SumReducer.class);
+
+        // Set output key and value types
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        // Set input and output paths
+        FileInputFormat.addInputPath(
+            job, new Path(args[0])
+        );
+        FileOutputFormat.setOutputPath(
+            job, new Path(args[1])
+        );
+
+        // Run job
+        System.exit(
+            job.waitForCompletion(true) ? 0 : 1
+        );
+    }
+}
