@@ -1,0 +1,171 @@
+// ============================================================
+// PRACTICAL 12: WEATHER DATA ANALYSIS USING HADOOP MAPREDUCE
+//
+// Objective:
+// Read a text file containing weather data and compute the
+// average of:
+// 1. Temperature
+// 2. Dew Point
+// 3. Wind Speed
+//
+// Example Input File (sample_weather.txt):
+// 2025-01-01,25.5,18.2,12.4
+// 2025-01-02,27.0,19.1,10.8
+// 2025-01-03,24.8,17.5,14.2
+//
+// Format:
+// Date,Temperature,DewPoint,WindSpeed
+//
+// Example Output:
+// dewpoint    18.266666666666666
+// temperature 25.766666666666666
+// windspeed   12.466666666666667
+// ============================================================
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.Text;
+
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class WeatherAverage {
+
+    // ========================================================
+    // MAPPER CLASS
+    // Emits:
+    // ("temperature", value)
+    // ("dewpoint", value)
+    // ("windspeed", value)
+    // ========================================================
+    public static class WeatherMapper
+            extends Mapper<Object, Text, Text, DoubleWritable> {
+
+        private Text outputKey = new Text();
+        private DoubleWritable outputValue = new DoubleWritable();
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            String line = value.toString().trim();
+
+            // Skip empty lines
+            if (line.length() == 0) {
+                return;
+            }
+
+            // Split CSV line
+            String[] fields = line.split(",");
+
+            // Expected format:
+            // Date,Temperature,DewPoint,WindSpeed
+            if (fields.length == 4) {
+                try {
+                    double temperature = Double.parseDouble(fields[1]);
+                    double dewPoint = Double.parseDouble(fields[2]);
+                    double windSpeed = Double.parseDouble(fields[3]);
+
+                    // Emit temperature
+                    outputKey.set("temperature");
+                    outputValue.set(temperature);
+                    context.write(outputKey, outputValue);
+
+                    // Emit dew point
+                    outputKey.set("dewpoint");
+                    outputValue.set(dewPoint);
+                    context.write(outputKey, outputValue);
+
+                    // Emit wind speed
+                    outputKey.set("windspeed");
+                    outputValue.set(windSpeed);
+                    context.write(outputKey, outputValue);
+
+                } catch (NumberFormatException e) {
+                    // Ignore invalid numeric records
+                }
+            }
+        }
+    }
+
+    // ========================================================
+    // REDUCER CLASS
+    // Calculates average = sum / count
+    // ========================================================
+    public static class AverageReducer
+            extends Reducer<Text, DoubleWritable,
+                            Text, DoubleWritable> {
+
+        private DoubleWritable result = new DoubleWritable();
+
+        public void reduce(Text key,
+                           Iterable<DoubleWritable> values,
+                           Context context)
+                throws IOException, InterruptedException {
+
+            double sum = 0.0;
+            int count = 0;
+
+            for (DoubleWritable value : values) {
+                sum += value.get();
+                count++;
+            }
+
+            if (count > 0) {
+                double average = sum / count;
+                result.set(average);
+                context.write(key, result);
+            }
+        }
+    }
+
+    // ========================================================
+    // DRIVER METHOD
+    // ========================================================
+    public static void main(String[] args)
+            throws Exception {
+
+        // Check arguments
+        if (args.length != 2) {
+            System.err.println(
+                "Usage: WeatherAverage <input path> <output path>"
+            );
+            System.exit(-1);
+        }
+
+        // Create configuration
+        Configuration conf = new Configuration();
+
+        // Create job
+        Job job = Job.getInstance(conf, "Weather Average");
+        job.setJarByClass(WeatherAverage.class);
+
+        // Set Mapper and Reducer
+        job.setMapperClass(WeatherMapper.class);
+        job.setReducerClass(AverageReducer.class);
+
+        // Set output key/value types
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(DoubleWritable.class);
+
+        // Set input and output paths
+        FileInputFormat.addInputPath(
+            job, new Path(args[0])
+        );
+        FileOutputFormat.setOutputPath(
+            job, new Path(args[1])
+        );
+
+        // Execute job
+        System.exit(
+            job.waitForCompletion(true) ? 0 : 1
+        );
+    }
+}
