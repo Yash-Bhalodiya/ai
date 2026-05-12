@@ -1,0 +1,90 @@
+// ============================================================
+// PRACTICAL 13: SIMPLE PROGRAM IN SCALA USING APACHE SPARK
+//
+// Objective:
+// Write a basic Apache Spark program in Scala that reads a text
+// file and counts the number of words (Word Count Example).
+//
+// Input File (input.txt):
+// ---------------------------------
+// Apache Spark is fast
+// Spark is powerful
+// Big Data Analytics with Spark
+// ---------------------------------
+//
+// Expected Output:
+// ---------------------------------
+// Apache -> 1
+// Spark  -> 3
+// is     -> 2
+// fast   -> 1
+// powerful -> 1
+// Big    -> 1
+// Data   -> 1
+// Analytics -> 1
+// with   -> 1
+// ---------------------------------
+// ============================================================
+
+// Import Spark libraries
+import org.apache.spark.sql.SparkSession
+
+object SimpleWordCount {
+
+  def main(args: Array[String]): Unit = {
+
+    // --------------------------------------------------------
+    // STEP 1: Create Spark Session
+    // --------------------------------------------------------
+    val spark = SparkSession.builder()
+      .appName("Simple Word Count")
+      .master("local[*]")   // Run locally using all CPU cores
+      .getOrCreate()
+
+    // Get Spark Context
+    val sc = spark.sparkContext
+
+    // --------------------------------------------------------
+    // STEP 2: Read Input Text File
+    // --------------------------------------------------------
+    // Place input.txt in the project directory
+    val textFile = sc.textFile("input.txt")
+
+    // --------------------------------------------------------
+    // STEP 3: Split Lines into Words
+    // --------------------------------------------------------
+    val words = textFile.flatMap(line => line.split("\\s+"))
+
+    // --------------------------------------------------------
+    // STEP 4: Map Each Word to (word, 1)
+    // --------------------------------------------------------
+    val wordPairs = words.map(word => (word, 1))
+
+    // --------------------------------------------------------
+    // STEP 5: Reduce by Key to Count Occurrences
+    // --------------------------------------------------------
+    val wordCounts = wordPairs.reduceByKey(_ + _)
+
+    // --------------------------------------------------------
+    // STEP 6: Collect and Display Results
+    // --------------------------------------------------------
+    println("Word Count Results:\n")
+
+    wordCounts.collect().foreach {
+      case (word, count) =>
+        println(word + " -> " + count)
+    }
+
+    // --------------------------------------------------------
+    // STEP 7: Save Output to Folder
+    // --------------------------------------------------------
+    wordCounts.saveAsTextFile("output")
+
+    println("\nResults saved to 'output' folder.")
+
+    // --------------------------------------------------------
+    // STEP 8: Stop Spark Session
+    // --------------------------------------------------------
+    spark.stop()
+  }
+}
