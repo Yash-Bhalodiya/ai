@@ -1,1 +1,247 @@
+# ============================================================
+# PRACTICAL 1: DATA WRANGLING I
+# Dataset: Titanic Dataset
+# Source: https://www.kaggle.com/datasets/yasserh/titanic-dataset
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import pandas as pd
+import numpy as np
+
+print("Libraries imported successfully.\n")
+
+# ------------------------------------------------------------
+# STEP 2: Dataset Description
+# ------------------------------------------------------------
+print("Dataset Name : Titanic Dataset")
+print("Source       : https://www.kaggle.com/datasets/yasserh/titanic-dataset")
+print("Description  : Contains passenger details such as age, gender, fare, and survival status.\n")
+
+# ------------------------------------------------------------
+# STEP 3: Load Dataset into Pandas DataFrame
+# ------------------------------------------------------------
+# Download titanic.csv from Kaggle and place it in the same folder
+df = pd.read_csv("titanic.csv")
+
+print("Dataset loaded successfully.\n")
+
+# Display first 5 rows
+print("First 5 Rows of Dataset:")
+print(df.head())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 4: Data Preprocessing
+# ------------------------------------------------------------
+
+# 4.1 Check dimensions of dataset
+print("Shape of Dataset (Rows, Columns):")
+print(df.shape)
+print("\n")
+
+# 4.2 Display column names
+print("Column Names:")
+print(df.columns.tolist())
+print("\n")
+
+# 4.3 Display dataset information
+print("Dataset Information:")
+print(df.info())
+print("\n")
+
+# 4.4 Check data types
+print("Data Types of Each Column:")
+print(df.dtypes)
+print("\n")
+
+# 4.5 Check missing values
+print("Missing Values in Each Column:")
+print(df.isnull().sum())
+print("\n")
+
+# 4.6 Statistical summary of numeric columns
+print("Statistical Summary:")
+print(df.describe())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 5: Data Formatting and Type Conversion
+# ------------------------------------------------------------
+
+# Example: Ensure Age column is numeric
+df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
+
+# Fill missing Age values with mean
+df['Age'].fillna(df['Age'].mean(), inplace=True)
+
+# Fill missing Embarked values with mode
+if 'Embarked' in df.columns:
+    df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+
+print("Data types after conversion:")
+print(df.dtypes)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 6: Data Normalization
+# Normalize Age and Fare columns to range [0, 1]
+# ------------------------------------------------------------
+if 'Age' in df.columns:
+    df['Age_Normalized'] = (df['Age'] - df['Age'].min()) / (df['Age'].max() - df['Age'].min())
+
+if 'Fare' in df.columns:
+    df['Fare_Normalized'] = (df['Fare'] - df['Fare'].min()) / (df['Fare'].max() - df['Fare'].min())
+
+print("Normalized Columns Added:")
+print(df[['Age', 'Age_Normalized', 'Fare', 'Fare_Normalized']].head())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 7: Convert Categorical Variables to Quantitative Variables
+# ------------------------------------------------------------
+
+# 7.1 Label Encoding for Sex column
+if 'Sex' in df.columns:
+    df['Sex_Encoded'] = df['Sex'].map({'male': 0, 'female': 1})
+
+# 7.2 One-Hot Encoding for Embarked column
+if 'Embarked' in df.columns:
+    df = pd.get_dummies(df, columns=['Embarked'], prefix='Embarked')
+
+print("Categorical Variables Converted to Numerical Form.")
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 8: Final Dataset Preview
+# ------------------------------------------------------------
+print("Final Dataset (First 5 Rows):")
+print(df.head())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 9: Final Missing Value Check
+# ------------------------------------------------------------
+print("Missing Values After Preprocessing:")
+print(df.isnull().sum())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 10: Save Cleaned Dataset
+# ------------------------------------------------------------
+df.to_csv("titanic_cleaned.csv", index=False)
+print("Cleaned dataset saved as 'titanic_cleaned.csv'.")
+
+
+Data Wrangling, also known as Data Preprocessing or Data Cleaning, 
+is the process of transforming raw and unstructured data into a clean and 
+organized format suitable for analysis and machine learning. In real-world 
+applications, datasets often contain missing values, inconsistent formats, 
+duplicate records, and categorical variables that cannot be directly used by 
+analytical models. Data wrangling improves the quality of data and ensures 
+accurate results.
+
+Pandas
+
+Pandas is a powerful Python library used for data manipulation and analysis. 
+It provides the DataFrame structure, which stores data in tabular form with rows and columns.
+
+NumPy
+
+NumPy is used for numerical computations and array operations. It also supports 
+handling missing values and mathematical transformations.
+
+Data Preprocessing
+1. Checking Dimensions
+The shape attribute returns the number of rows and columns.
+df.shape
+
+2. Viewing Structure
+The info() function displays:
+Column names
+Non-null counts
+Data types
+
+3. Statistical Summary
+The describe() function provides:
+Count
+Mean
+Standard Deviation
+Minimum and Maximum
+Quartiles
+
+4. Detecting Missing Values
+Missing values are identified using:
+df.isnull().sum()
+Missing values can be removed using dropna() or replaced using fillna().
+
+Data Types:
+Each column has a specific data type:
+int64 → Integer values
+float64 → Decimal values
+object → Text or categorical data
+bool → True/False values
+
+The data types are displayed using:
+
+df.dtypes
+
+If a variable is stored in the wrong format, it can be converted using astype() or pd.to_numeric().
+
+Data Formatting
+
+Data formatting ensures that variables are stored in the correct type and structure. 
+For example, an age column stored as text can be converted to numeric format so that 
+calculations such as mean and standard deviation can be performed.
+
+Data Normalization
+
+Normalization scales numerical values to a common range, usually between 0 and 1. 
+This is useful when variables have different units and ranges.
+Normalization improves the performance of machine learning algorithms.
+
+| No. | Question                                                    | Answer                                                                                                                                                                   |
+| --- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | What is Data Wrangling?                                     | Data Wrangling is the process of cleaning, transforming, and organizing raw data into a suitable format for analysis.                                                    |
+| 2   | Why is Data Wrangling important?                            | Real-world data contains missing values, inconsistencies, and incorrect formats. Data wrangling improves data quality and prepares it for analysis and machine learning. |
+| 3   | What is Data Preprocessing?                                 | Data preprocessing is another name for data wrangling; it involves cleaning and preparing data before analysis.                                                          |
+| 4   | Which libraries are used in this practical?                 | `pandas` and `numpy`.                                                                                                                                                    |
+| 5   | What is Pandas?                                             | Pandas is a Python library used for data manipulation and analysis using DataFrame and Series structures.                                                                |
+| 6   | What is NumPy?                                              | NumPy is a Python library for numerical computations and array operations.                                                                                               |
+| 7   | What is a DataFrame?                                        | A DataFrame is a two-dimensional tabular data structure with rows and columns.                                                                                           |
+| 8   | What is a Series?                                           | A Series is a one-dimensional labeled array in Pandas.                                                                                                                   |
+| 9   | How do you load a CSV file?                                 | Using `pd.read_csv("filename.csv")`.                                                                                                                                     |
+| 10  | What does `head()` do?                                      | Displays the first five rows of the dataset.                                                                                                                             |
+| 11  | What does `tail()` do?                                      | Displays the last five rows of the dataset.                                                                                                                              |
+| 12  | What does `shape` return?                                   | The number of rows and columns in the DataFrame.                                                                                                                         |
+| 13  | What does `info()` provide?                                 | Column names, data types, and non-null counts.                                                                                                                           |
+| 14  | What does `describe()` do?                                  | Generates summary statistics such as count, mean, standard deviation, min, max, and quartiles.                                                                           |
+| 15  | What is a missing value?                                    | A value that is absent from the dataset, represented as `NaN`.                                                                                                           |
+| 16  | What does NaN stand for?                                    | Not a Number.                                                                                                                                                            |
+| 17  | How do you detect missing values?                           | Using `df.isnull()` or `df.isnull().sum()`.                                                                                                                              |
+| 18  | How do you remove missing values?                           | Using `df.dropna()`.                                                                                                                                                     |
+| 19  | How do you replace missing values?                          | Using `df.fillna()` with mean, median, mode, or a constant.                                                                                                              |
+| 20  | What does `dtypes` show?                                    | The data type of each column.                                                                                                                                            |
+| 21  | What are common Pandas data types?                          | `int64`, `float64`, `object`, `bool`, and `category`.                                                                                                                    |
+| 22  | What does `object` type represent?                          | Text or categorical data.                                                                                                                                                |
+| 23  | How do you convert a column’s data type?                    | Using `astype()` or `pd.to_numeric()`.                                                                                                                                   |
+| 24  | What is data formatting?                                    | Ensuring variables are stored in the correct data type and format.                                                                                                       |
+| 25  | What is normalization?                                      | Scaling numerical values to a standard range, usually 0 to 1.                                                                                                            |
+| 26  | Why is normalization used?                                  | To bring features to the same scale and improve machine learning performance.                                                                                            |
+| 27  | What is the normalization formula?                          | X' = \frac{X - X_{min}}{X_{max} - X_{min}}                                                                                                                               |
+| 28  | What is categorical data?                                   | Non-numeric data representing categories such as gender or city.                                                                                                         |
+| 29  | What is numerical data?                                     | Data represented by numbers, such as age, marks, or salary.                                                                                                              |
+| 30  | Why convert categorical variables into numerical variables? | Machine learning algorithms require numerical input.                                                                                                                     |
+| 31  | What is Label Encoding?                                     | Assigning a unique integer to each category.                                                                                                                             |
+| 32  | What is One-Hot Encoding?                                   | Creating separate binary columns for each category.                                                                                                                      |
+| 33  | Which function performs one-hot encoding?                   | `pd.get_dummies()`.                                                                                                                                                      |
+| 34  | How can Male and Female be encoded?                         | Male = 0, Female = 1.                                                                                                                                                    |
+| 35  | What is Kaggle?                                             | [Kaggle](https://www.kaggle.com?utm_source=chatgpt.com) is an online platform that provides datasets, competitions, and machine learning resources.                      |
+| 36  | What is an open-source dataset?                             | A dataset that is freely available for download and use.                                                                                                                 |
+| 37  | What is Exploratory Data Analysis (EDA)?                    | The initial process of understanding the dataset through summaries and visualizations.                                                                                   |
+| 38  | What is the difference between `dropna()` and `fillna()`?   | `dropna()` removes rows/columns with missing values, while `fillna()` replaces missing values.                                                                           |
+| 39  | What is the Titanic dataset used for?                       | Data analysis and machine learning tasks such as predicting passenger survival.                                                                                          |
+| 40  | What does “Garbage In, Garbage Out” mean?                   | Poor-quality input data leads to poor analysis and inaccurate models.                                                                                                    |
+
 
