@@ -1,0 +1,300 @@
+# ============================================================
+# PRACTICAL 4: DATA ANALYTICS I
+# Linear Regression using Boston Housing Dataset
+#
+# Dataset:
+# Download train.csv from:
+# https://www.kaggle.com/c/boston-housing/data
+#
+# Target Column: medv
+# Objective:
+# Predict house prices using Linear Regression.
+# ============================================================
+
+# ------------------------------------------------------------
+# STEP 1: Import Required Libraries
+# ------------------------------------------------------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+
+# ------------------------------------------------------------
+# STEP 2: Load Dataset
+# ------------------------------------------------------------
+# Place train.csv in the same folder as your notebook
+df = pd.read_csv("train.csv")
+
+print("Dataset Loaded Successfully.\n")
+
+# Display first 5 rows
+print("First 5 Rows of Dataset:")
+print(df.head())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 3: Basic Information About Dataset
+# ------------------------------------------------------------
+print("Shape of Dataset:", df.shape)
+print("\nColumn Names:")
+print(df.columns.tolist())
+
+print("\nData Types:")
+print(df.dtypes)
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 4: Handle Missing Values
+# ------------------------------------------------------------
+# Fill missing numerical values with median
+df = df.fillna(df.median(numeric_only=True))
+
+print("Missing Values After Filling:")
+print(df.isnull().sum())
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 5: Detect Target Column Automatically
+# ------------------------------------------------------------
+if 'MEDV' in df.columns:
+    target_col = 'MEDV'
+elif 'medv' in df.columns:
+    target_col = 'medv'
+else:
+    raise ValueError("Target column MEDV or medv not found.")
+
+print("Target Column Detected:", target_col)
+
+# ------------------------------------------------------------
+# STEP 6: Define Features (X) and Target (y)
+# ------------------------------------------------------------
+# Remove ID column if present
+drop_cols = [target_col]
+if 'ID' in df.columns:
+    drop_cols.append('ID')
+
+X = df.drop(drop_cols, axis=1)
+y = df[target_col]
+
+print("Features Shape:", X.shape)
+print("Target Shape:", y.shape)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 7: Split Data into Training and Testing Sets
+# ------------------------------------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+
+print("Training Set Shape:", X_train.shape)
+print("Testing Set Shape:", X_test.shape)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 8: Create and Train Linear Regression Model
+# ------------------------------------------------------------
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+print("Model Training Completed.\n")
+
+# ------------------------------------------------------------
+# STEP 9: Display Model Parameters
+# ------------------------------------------------------------
+print("Intercept:")
+print(model.intercept_)
+print("\n")
+
+print("Coefficients:")
+coef_df = pd.DataFrame({
+    'Feature': X.columns,
+    'Coefficient': model.coef_
+})
+print(coef_df)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 10: Make Predictions
+# ------------------------------------------------------------
+y_pred = model.predict(X_test)
+
+print("First 10 Actual vs Predicted Values:")
+comparison = pd.DataFrame({
+    'Actual Price': y_test.values[:10],
+    'Predicted Price': y_pred[:10]
+})
+print(comparison)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 11: Evaluate Model Performance
+# ------------------------------------------------------------
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+print("Model Evaluation Metrics:")
+print("Mean Absolute Error (MAE):", mae)
+print("Mean Squared Error (MSE):", mse)
+print("Root Mean Squared Error (RMSE):", rmse)
+print("R² Score:", r2)
+print("\n")
+
+# ------------------------------------------------------------
+# STEP 12: Visualization - Actual vs Predicted Prices
+# ------------------------------------------------------------
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test, y_pred)
+plt.xlabel("Actual House Prices")
+plt.ylabel("Predicted House Prices")
+plt.title("Actual vs Predicted House Prices")
+plt.grid(True)
+plt.show()
+
+# ------------------------------------------------------------
+# STEP 13: Visualization - Residual Plot
+# ------------------------------------------------------------
+residuals = y_test - y_pred
+
+plt.figure(figsize=(8, 6))
+plt.scatter(y_pred, residuals)
+plt.axhline(y=0)
+plt.xlabel("Predicted Prices")
+plt.ylabel("Residuals")
+plt.title("Residual Plot")
+plt.grid(True)
+plt.show()
+
+# ------------------------------------------------------------
+# STEP 14: Save Predictions to CSV
+# ------------------------------------------------------------
+comparison.to_csv("boston_housing_predictions.csv", index=False)
+
+print("Predictions saved as 'boston_housing_predictions.csv'")
+print("Practical 4 completed successfully.")
+
+
+Data Analytics involves applying statistical and machine learning 
+techniques to discover patterns in data and build predictive models.
+In this practical, a Linear Regression model is developed to predict 
+house prices using the Boston Housing dataset. Linear Regression is one 
+of the most fundamental supervised learning algorithms and is widely used 
+when the target variable is continuous.
+
+Supervised Learning
+
+Linear Regression belongs to supervised learning, where the algorithm learns from labeled examples.
+
+Input (Features) → House characteristics
+Output (Target) → House price (MEDV)
+
+The model learns from historical data and predicts house prices for new houses.
+
+
+Linear Regression
+
+Linear Regression models the relationship between independent variables and a dependent 
+variable by fitting a straight line (or hyperplane in multiple dimensions).
+
+
+Model Evaluation Metrics
+Mean Absolute Error (MAE)
+
+Measures the average absolute difference between actual and predicted values.
+
+MAE=n1∑∣yi−y^i∣
+Mean Squared Error (MSE)
+
+Measures the average squared difference between actual and predicted values.
+
+MSE=n1∑i=1 n(yi−y^i)2
+
+Root Mean Squared Error (RMSE)
+
+Square root of MSE; expressed in the same units as the target variable.
+
+RMSE=rootMSE
+	​
+
+R² Score (Coefficient of Determination)
+
+Measures the proportion of variance explained by the model.
+
+R2=1−SSres / SStot
+R2=1: Perfect fit
+R2=0: No explanatory power
+Visualization
+
+Two plots are commonly used:
+
+Actual vs Predicted Scatter Plot
+Shows how close predictions are to true prices.
+Residual Plot
+Displays prediction errors. A random scatter around zero indicates a well-fitted model.
+
+
+Applications of Linear Regression
+House price prediction
+Sales forecasting
+Stock trend estimation
+Demand forecasting
+Economic modeling
+
+
+| No. | Viva Question                                                 | Answer                                                                                                                                                                                       |
+| --- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | What is Data Analytics?                                       | Data Analytics is the process of examining data to discover useful patterns, relationships, and insights for decision-making.                                                                |
+| 2   | What is Linear Regression?                                    | Linear Regression is a supervised machine learning algorithm used to predict a continuous numerical value by modeling a linear relationship between input variables and the target variable. |
+| 3   | What type of learning is Linear Regression?                   | Supervised Learning.                                                                                                                                                                         |
+| 4   | What is the Boston Housing Dataset?                           | A dataset containing information about houses in Boston with 13 input features and one target variable (`MEDV` or `medv`) representing house prices.                                         |
+| 5   | What is the target variable in this practical?                | `MEDV` (or `medv`), which represents the median value of owner-occupied homes in thousands of dollars.                                                                                       |
+| 6   | How many samples are present in the Boston Housing Dataset?   | 506 samples.                                                                                                                                                                                 |
+| 7   | How many feature variables are present?                       | 13 feature variables (excluding the target column).                                                                                                                                          |
+| 8   | What is supervised learning?                                  | A learning method where the model is trained using input data and corresponding correct output labels.                                                                                       |
+| 9   | What is the general equation of Linear Regression?            | y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_n x_n                                                                                                                               |
+| 10  | What does the intercept represent?                            | The predicted value of the target when all input features are zero.                                                                                                                          |
+| 11  | What do regression coefficients represent?                    | The amount by which the target changes for a one-unit increase in the corresponding feature, keeping other features constant.                                                                |
+| 12  | What are independent variables?                               | Input features used to predict the target variable.                                                                                                                                          |
+| 13  | What is the dependent variable?                               | The target variable to be predicted (`MEDV`).                                                                                                                                                |
+| 14  | Why is train-test split used?                                 | To evaluate model performance on unseen data and avoid overfitting.                                                                                                                          |
+| 15  | What percentage split is commonly used?                       | 80% training and 20% testing.                                                                                                                                                                |
+| 16  | What is `random_state`?                                       | A seed value that ensures reproducible train-test splits.                                                                                                                                    |
+| 17  | What does `fit()` do?                                         | Trains the Linear Regression model on the training data.                                                                                                                                     |
+| 18  | What does `predict()` do?                                     | Generates predictions for new or test data.                                                                                                                                                  |
+| 19  | What is overfitting?                                          | When a model performs well on training data but poorly on unseen data.                                                                                                                       |
+| 20  | What is underfitting?                                         | When a model is too simple to capture underlying patterns.                                                                                                                                   |
+| 21  | What is Mean Absolute Error (MAE)?                            | The average absolute difference between actual and predicted values.                                                                                                                         |
+| 22  | What is Mean Squared Error (MSE)?                             | MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2                                                                                                                                         |
+| 23  | What is Root Mean Squared Error (RMSE)?                       | The square root of MSE, expressed in the same units as the target variable.                                                                                                                  |
+| 24  | What is R² Score?                                             | A metric that measures the proportion of variance in the target explained by the model.                                                                                                      |
+| 25  | What is the range of R²?                                      | Usually from 0 to 1; values closer to 1 indicate a better fit.                                                                                                                               |
+| 26  | What does an R² score of 0.85 mean?                           | The model explains 85% of the variation in house prices.                                                                                                                                     |
+| 27  | Which Python library is used for Linear Regression?           | [scikit-learn](https://scikit-learn.org?utm_source=chatgpt.com) (`sklearn.linear_model.LinearRegression`).                                                                                   |
+| 28  | Which function is used to split the dataset?                  | `train_test_split()`.                                                                                                                                                                        |
+| 29  | Which function is used to calculate R² score?                 | `r2_score()`.                                                                                                                                                                                |
+| 30  | Which function is used to calculate RMSE?                     | `np.sqrt(mean_squared_error())`.                                                                                                                                                             |
+| 31  | What is a residual?                                           | The difference between actual and predicted values.                                                                                                                                          |
+| 32  | What is the purpose of a residual plot?                       | To analyze the distribution of prediction errors.                                                                                                                                            |
+| 33  | What does a good residual plot look like?                     | Residuals randomly scattered around zero.                                                                                                                                                    |
+| 34  | Why handle missing values before training?                    | Machine learning algorithms generally cannot work with missing data.                                                                                                                         |
+| 35  | Which imputation method is used in this practical?            | Median imputation.                                                                                                                                                                           |
+| 36  | Why remove the `ID` column?                                   | It is only an identifier and has no predictive meaning.                                                                                                                                      |
+| 37  | What is the difference between regression and classification? | Regression predicts continuous values; classification predicts categories.                                                                                                                   |
+| 38  | Give real-world applications of Linear Regression.            | House price prediction, sales forecasting, and demand estimation.                                                                                                                            |
+| 39  | Which later practical builds on this concept?                 | Logistic Regression and Naïve Bayes practicals.                                                                                                                                              |
+| 40  | Why is Linear Regression important?                           | It is simple, interpretable, and forms the foundation for many advanced predictive models.                                                                                                   |
